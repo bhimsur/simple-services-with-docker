@@ -1,0 +1,48 @@
+version: "3"
+services:
+  gateway:
+    build:
+      context: gateway
+      dockerfile: Dockerfile
+      args:
+        API_URL: http://api:8080/api/todo
+    container_name: todo-gateway
+    ports:
+      - "3000:3000"
+    depends_on:
+      - api
+    networks:
+      - frontend
+  api:
+    build:
+      context: api
+      dockerfile: Dockerfile
+    restart: always
+    container_name: todo-api
+    expose:
+      - 8080
+    depends_on:
+      - postgres
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/todoapp
+      - SPRING_DATASOURCE_USERNAME=admin
+      - SPRING_DATASOURCE_PASSWORD=admin
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+    networks:
+      - backend
+      - frontend
+  postgres:
+    image: "postgres:13"
+    container_name: todo-db
+    restart: always
+    volumes:
+      - ~/project/docker/pgdata:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_USER=admin
+      - POSTGRES_PASSWORD=admin
+      - POSTGRES_DB=todoapp
+    networks:
+      - backend
+networks:
+  backend:
+  frontend:
